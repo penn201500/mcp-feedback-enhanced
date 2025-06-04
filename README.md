@@ -195,7 +195,28 @@ python src/mcp_feedback_enhanced/test_network_resilience.py interactive
 | `FORCE_WEB` | Force use Web UI | `true`/`false` | `false` |
 | `MCP_DEBUG` | Debug mode | `true`/`false` | `false` |
 | `MCP_PERSISTENT` | Persistent connection mode | `true`/`false` | `false` |
+| `MCP_FAST_LAUNCH` | Fast startup with preloading | `true`/`false` | `false` |
 | `INCLUDE_BASE64_DETAIL` | Full Base64 for images | `true`/`false` | `false` |
+
+### Window Behavior Settings (GUI Configuration)
+Configure window behavior through the GUI settings panel or directly modify `~/.config/mcp-feedback-enhanced/ui_settings.json`:
+
+| Setting | Purpose | Default | Description |
+|---------|---------|---------|-------------|
+| `window.auto_focus` | Auto focus window | `true` | Window automatically gains focus when opened |
+| `window.stay_on_top` | Stay on top | `false` | Window stays above all other applications |
+| `window.auto_raise` | Auto raise window | `true` | Window automatically comes to front when opened |
+| `window.minimize_on_focus_loss` | Auto minimize | `false` | Minimize window when it loses focus (2s delay) |
+| `window.opacity` | Window transparency | `1.0` | Window opacity (0.1-1.0) |
+
+### Window Shortcuts
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+Shift+T` | Toggle stay on top | Toggle window always on top mode |
+| `Ctrl+Shift+R` | Re-focus window | Force window to gain focus |
+| `Ctrl+Shift+H` | Hide/Show window | Toggle window visibility |
+| `Ctrl+Enter` / `Cmd+Enter` | Submit feedback | Submit current feedback |
+| `Escape` | Cancel feedback | Cancel and close window |
 
 ### Persistent Connection Settings
 - **Heartbeat Interval**: 30 seconds (keeps connection alive)
@@ -285,32 +306,4 @@ A: **NEW**: Use persistent connection mode. Sessions are automatically saved to 
 A: **NEW**: Run `python src/mcp_feedback_enhanced/test_network_resilience.py interactive` then manually disconnect/reconnect your network to test the recovery mechanism.
 
 **Q: Getting "Unexpected token 'D'" error**
-A: Debug output interference. Set `MCP_DEBUG=false` or remove the environment variable.
-
-**Q: Chinese character garbled text**
-A: Fixed in v2.0.3. Update to latest version: `uvx mcp-feedback-enhanced@latest`
-
-**Q: Image upload fails**
-A: Check file size (≤1MB) and format (PNG/JPG/GIF/BMP/WebP).
-
-**Q: Web UI won't start**
-A: Set `FORCE_WEB=true` or check firewall settings.
-
-**Q: Gemini Pro 2.5 cannot parse images**
-A: Known issue. Gemini Pro 2.5 may not correctly parse uploaded image content. Testing shows Claude-4-Sonnet can properly analyze images. Recommend using Claude models for better image understanding capabilities.
-
-**Q: Multi-screen window positioning issues**
-A: Fixed in v2.1.1. Go to "⚙️ Settings" tab, check "Always show window at primary screen center" to resolve window positioning issues. Especially useful for T-shaped screen arrangements and other complex multi-monitor configurations.
-
-## 🙏 Acknowledgments
-
-### 🌟 Support Original Author
-**Fábio Ferreira** - [X @fabiomlferreira](https://x.com/fabiomlferreira)
-**Original Project:** [noopstudios/interactive-feedback-mcp](https://github.com/noopstudios/interactive-feedback-mcp)
-
-If you find this useful, please:
-- ⭐ [Star the original project](https://github.com/noopstudios/interactive-feedback-mcp)
-- 📱 [Follow the original author](https://x.com/fabiomlferreira)
-
-### Design Inspiration
-**sanshao85** - [mcp-feedback-collector](https://github.com/sanshao85/mcp-feedback-collector)
+A: Debug output interference. Set `MCP_DEBUG=false`
