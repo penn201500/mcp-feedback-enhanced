@@ -299,6 +299,12 @@ class FeedbackWindow(QMainWindow):
         cancel_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self)
         cancel_shortcut.activated.connect(self._cancel_feedback)
 
+                        # 聚焦到輸入框快捷鍵 (從配置讀取，支持用戶自定義)
+        focus_shortcut_key = self.config_manager.get_focus_input_shortcut()
+        self.focus_input_shortcut = QShortcut(QKeySequence(focus_shortcut_key), self)
+        self.focus_input_shortcut.activated.connect(self._focus_input_shortcut)
+        debug_log(f"設置聚焦輸入框快捷鍵: {focus_shortcut_key}")
+
     def _connect_signals(self) -> None:
         """連接信號"""
         # 連接語言變更信號
@@ -829,6 +835,40 @@ class FeedbackWindow(QMainWindow):
             debug_log(f"自動聚焦失敗: {e}")
             import traceback
             debug_log(f"詳細錯誤: {traceback.format_exc()}")
+
+    def _focus_input_shortcut(self) -> None:
+        """快捷鍵聚焦到輸入框 (Ctrl+I / Cmd+I)"""
+        try:
+            # 獲取回饋輸入框
+            feedback_input = None
+
+            # 檢查是否有tab_manager
+            if not hasattr(self, 'tab_manager'):
+                debug_log("[快捷鍵] tab_manager 不存在")
+                return
+
+            # 檢查 feedback_tab（無論是合併模式還是分離模式）
+            if hasattr(self.tab_manager, 'feedback_tab') and self.tab_manager.feedback_tab:
+                if hasattr(self.tab_manager.feedback_tab, 'feedback_input'):
+                    feedback_input = self.tab_manager.feedback_tab.feedback_input
+                    debug_log("[快捷鍵] 找到feedback_tab中的輸入框")
+                else:
+                    debug_log("[快捷鍵] feedback_tab存在但沒有feedback_input屬性")
+            else:
+                debug_log("[快捷鍵] 沒有找到feedback_tab")
+
+            # 設置焦點到輸入框
+            if feedback_input:
+                feedback_input.setFocus()
+                feedback_input.raise_()  # 確保輸入框可見
+                debug_log("[快捷鍵] 已通過 Ctrl+I/Cmd+I 聚焦到輸入框")
+            else:
+                debug_log("[快捷鍵] 未找到回饋輸入框，無法聚焦")
+
+        except Exception as e:
+            debug_log(f"[快捷鍵] 聚焦失敗: {e}")
+            import traceback
+            debug_log(f"[快捷鍵] 詳細錯誤: {traceback.format_exc()}")
 
     def closeEvent(self, event) -> None:
         """窗口關閉事件"""

@@ -208,6 +208,15 @@ class ConfigManager:
         self.update_partial_config({'auto_focus_enabled': enabled})
         debug_log(f"自動聚焦設置: {'啟用' if enabled else '停用'}")
 
+    def get_focus_input_shortcut(self) -> str:
+        """獲取聚焦輸入框的快捷鍵"""
+        return self.get('focus_input_shortcut', 'Ctrl+I')  # 預設為 Ctrl+I
+
+    def set_focus_input_shortcut(self, shortcut: str) -> None:
+        """設置聚焦輸入框的快捷鍵"""
+        self.update_partial_config({'focus_input_shortcut': shortcut})
+        debug_log(f"聚焦輸入框快捷鍵設置: {shortcut}")
+
     def reset_settings(self) -> None:
         """重置所有設定到預設值"""
         try:
