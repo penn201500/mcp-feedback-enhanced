@@ -1,7 +1,7 @@
 /**
  * Web UI 樣式
  * ===========
- * 
+ *
  * 補充樣式和動畫效果
  */
 
@@ -39,7 +39,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* 淡入動畫 */
@@ -48,8 +50,14 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* 滑入動畫 */
@@ -58,8 +66,14 @@
 }
 
 @keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* 脈衝動畫 */
@@ -68,9 +82,15 @@
 }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 /* 工具提示 */
@@ -172,7 +192,8 @@ table {
     margin-bottom: 20px;
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
@@ -193,7 +214,7 @@ code {
     background: var(--bg-tertiary);
     padding: 2px 6px;
     border-radius: 3px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 0.9em;
 }
 
@@ -358,7 +379,7 @@ pre code {
 
 /* 主體樣式 */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -434,7 +455,7 @@ body {
     color: var(--warning-color);
     font-size: 13px;
     font-weight: bold;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
     min-width: 45px;
     text-align: center;
 }
@@ -446,10 +467,6 @@ body {
 .countdown-timer.danger {
     color: var(--error-color);
 }
-
-
-
-
 
 /* 語言選擇器 */
 .language-selector {
@@ -706,13 +723,13 @@ body {
 }
 
 .command-input {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
     min-height: 80px;
 }
 
 /* 新增：單行命令輸入框樣式 */
 .command-input-line {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 14px;
     border: 1px solid var(--border-color);
     transition: border-color 0.3s ease;
@@ -729,7 +746,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 12px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 14px;
     line-height: 1.4;
     color: var(--text-primary);
@@ -1096,7 +1113,7 @@ body {
 
 /* 箭頭指示器 */
 .image-settings-summary::after {
-    content: '▼';
+    content: "▼";
     font-size: 10px;
     color: var(--text-secondary);
     transition: all 0.3s ease;
@@ -1204,7 +1221,7 @@ body {
 }
 
 .image-setting-checkbox:checked::after {
-    content: '✓';
+    content: "✓";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1326,7 +1343,7 @@ h3.combined-section-title {
 }
 
 .auto-refresh-toggle input[type="checkbox"]:checked::after {
-    content: '✓';
+    content: "✓";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1389,4 +1406,15 @@ h3.combined-section-title {
     color: var(--text-secondary);
     font-size: 14px;
     white-space: nowrap;
+}
+
+/* Placeholder 文本換行修復 - 全局樣式 */
+textarea::placeholder,
+#feedbackText::placeholder,
+#combinedFeedbackText::placeholder {
+    white-space: pre-line !important;
+    line-height: 1.4 !important;
+    font-family: inherit !important;
+    color: var(--text-secondary) !important;
+    opacity: 0.7 !important;
 }
