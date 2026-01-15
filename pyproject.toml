@@ -1,6 +1,9 @@
+# {{RIPER-10 Action}}
+# Role: LD | Path: Lightning | Time: 2026-01-15 17:08
+# Taste: Bump package version for a clean release sync.
 [project]
 name = "mcp-feedback-enhanced"
-version = "2.6.0"
+version = "2.6.1"
 description = "Enhanced MCP server for interactive user feedback and command execution in AI-assisted development, featuring dual interface support (Web UI and Desktop Application) with intelligent environment detection and cross-platform compatibility."
 readme = "README.md"
 requires-python = ">=3.11"

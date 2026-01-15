@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# {{RIPER-10 Action}}
+# Role: LD | Path: Lightning | Time: 2026-01-15 17:08
+# Taste: Keep package version aligned with release metadata.
 """
 MCP Interactive Feedback Enhanced
 ==================================
@@ -17,7 +20,7 @@ MCP Interactive Feedback Enhanced
 - 重構的模組化架構
 """
 
-__version__ = "2.6.0"
+__version__ = "2.6.1"
 __author__ = "Minidoracat"
 __email__ = "minidora0702@gmail.com"
 
