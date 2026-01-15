@@ -1,6 +1,6 @@
 // {{RIPER-10 Action}}
-// Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
-// Taste: Add session-open affordance without changing existing i18n strings
+// Role: LD | Path: Collaborative | Time: 2026-01-15 16:58
+// Taste: Add explicit copyable session links for long-term operational use.
 /**
  * MCP Feedback Enhanced - 會話 UI 渲染模組
  * =======================================
@@ -629,6 +629,39 @@
         });
 
         actions.appendChild(viewButton);
+
+        if (sessionData.session_id) {
+            const copyLabel = window.i18nManager ?
+                window.i18nManager.t('sessionManagement.copySessionLink') :
+                'Copy link';
+            const copyTitle = window.i18nManager ?
+                window.i18nManager.t('sessionManagement.copySessionLinkTitle') :
+                copyLabel;
+            const copyButton = DOMUtils.createElement('button', {
+                className: 'btn-small',
+                textContent: '⧉ ' + copyLabel,
+                attributes: {
+                    title: copyTitle,
+                    'aria-label': copyTitle
+                },
+                style: 'margin-left: 4px; font-size: 12px; padding: 2px 6px;'
+            });
+
+            DOMUtils.addEventListener(copyButton, 'click', function(e) {
+                e.stopPropagation();
+                const sessionUrl = window.location.origin + '/feedback/' +
+                    encodeURIComponent(sessionData.session_id);
+                const successMessage = window.i18nManager ?
+                    window.i18nManager.t('sessionManagement.copySessionLinkSuccess') :
+                    'Session link copied to clipboard';
+                const errorMessage = window.i18nManager ?
+                    window.i18nManager.t('sessionManagement.copySessionLinkError') :
+                    'Failed to copy session link';
+                window.MCPFeedback.Utils.copyToClipboard(sessionUrl, successMessage, errorMessage);
+            });
+
+            actions.appendChild(copyButton);
+        }
 
         if (isHistory && sessionData.session_id) {
             const isOpenable = StatusUtils.isActiveStatus(sessionData.status) ||
