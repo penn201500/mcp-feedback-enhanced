@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# {{RIPER-10 Action}}
+# Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+# Taste: Route sessions by ID to keep concurrent UI connections isolated
 """
 主要路由處理
 ============
@@ -12,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fastapi import Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from ... import __version__
 from ...debug import web_debug_log as debug_log
@@ -54,13 +57,13 @@ def setup_routes(manager: "WebUIManager"):
     """設置路由"""
 
     @manager.app.get("/", response_class=HTMLResponse)
-    async def index(request: Request):
-        """統一回饋頁面 - 重構後的主頁面"""
-        # 獲取當前活躍會話
-        current_session = manager.get_current_session()
+    async def index(request: Request, session_id: str | None = None):
+        """Entry point that redirects to a session-scoped page when possible."""
+        if session_id:
+            return RedirectResponse(url=f"/feedback/{session_id}")
 
+        current_session = manager.get_current_session()
         if not current_session:
-            # 沒有活躍會話時顯示等待頁面
             return manager.templates.TemplateResponse(
                 "index.html",
                 {
@@ -71,16 +74,31 @@ def setup_routes(manager: "WebUIManager"):
                 },
             )
 
-        # 有活躍會話時顯示回饋頁面
-        # 載入用戶的佈局模式設定
-        layout_mode = load_user_layout_settings()
+        return RedirectResponse(url=f"/feedback/{current_session.session_id}")
 
+    @manager.app.get("/feedback/{session_id}", response_class=HTMLResponse)
+    async def feedback_page(request: Request, session_id: str):
+        """Render a specific feedback session."""
+        session = manager.get_session(session_id)
+        if not session:
+            return manager.templates.TemplateResponse(
+                "index.html",
+                {
+                    "request": request,
+                    "title": "MCP Feedback Enhanced",
+                    "has_session": False,
+                    "version": __version__,
+                },
+            )
+
+        layout_mode = load_user_layout_settings()
         return manager.templates.TemplateResponse(
             "feedback.html",
             {
                 "request": request,
-                "project_directory": current_session.project_directory,
-                "summary": current_session.summary,
+                "project_directory": session.project_directory,
+                "summary": session.summary,
+                "session_id": session.session_id,
                 "title": "Interactive Feedback - 回饋收集",
                 "version": __version__,
                 "has_session": True,
@@ -177,6 +195,21 @@ def setup_routes(manager: "WebUIManager"):
             }
         )
 
+    @manager.app.get("/api/session/{session_id}")
+    async def get_session_by_id(request: Request, session_id: str):
+        """Get details for a specific session."""
+        session = manager.get_session(session_id)
+        if not session:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "error": "Session not found",
+                    "messageCode": get_msg_code("no_active_session"),
+                },
+            )
+
+        return JSONResponse(content=session.get_status_info())
+
     @manager.app.get("/api/all-sessions")
     async def get_all_sessions(request: Request):
         """獲取所有會話的實時狀態"""
@@ -256,10 +289,11 @@ def setup_routes(manager: "WebUIManager"):
             )
 
     @manager.app.websocket("/ws")
-    async def websocket_endpoint(websocket: WebSocket, lang: str = "zh-TW"):
-        """WebSocket 端點 - 重構後移除 session_id 依賴"""
-        # 獲取當前活躍會話
-        session = manager.get_current_session()
+    async def websocket_endpoint(
+        websocket: WebSocket, lang: str = "zh-TW", session_id: str | None = None
+    ):
+        """WebSocket endpoint bound to a specific session when provided."""
+        session = manager.get_session(session_id) if session_id else manager.get_current_session()
         if not session:
             await websocket.close(code=4004, reason="No active session")
             return
@@ -285,29 +319,11 @@ def setup_routes(manager: "WebUIManager"):
                 }
             )
 
-            # 檢查是否有待發送的會話更新
-            if getattr(manager, "_pending_session_update", False):
-                debug_log("檢測到待發送的會話更新，準備發送通知")
-                await websocket.send_json(
-                    {
-                        "type": "session_updated",
-                        "action": "new_session_created",
-                        "messageCode": get_msg_code("new_session_created"),
-                        "session_info": {
-                            "project_directory": session.project_directory,
-                            "summary": session.summary,
-                            "session_id": session.session_id,
-                        },
-                    }
-                )
-                manager._pending_session_update = False
-                debug_log("✅ 已發送會話更新通知到前端")
-            else:
-                # 發送當前會話狀態
-                await websocket.send_json(
-                    {"type": "status_update", "status_info": session.get_status_info()}
-                )
-                debug_log("已發送當前會話狀態到前端")
+            # 發送當前會話狀態
+            await websocket.send_json(
+                {"type": "status_update", "status_info": session.get_status_info()}
+            )
+            debug_log("已發送當前會話狀態到前端")
 
         except Exception as e:
             debug_log(f"發送連接確認失敗: {e}")
@@ -317,12 +333,14 @@ def setup_routes(manager: "WebUIManager"):
                 data = await websocket.receive_text()
                 message = json.loads(data)
 
-                # 重新獲取當前會話，以防會話已切換
-                current_session = manager.get_current_session()
-                if current_session and current_session.websocket == websocket:
-                    await handle_websocket_message(manager, current_session, message)
+                if manager.get_session(session.session_id) is None:
+                    debug_log("Session no longer active; closing WebSocket loop")
+                    break
+
+                if session.websocket == websocket:
+                    await handle_websocket_message(manager, session, message)
                 else:
-                    debug_log("會話已切換或 WebSocket 連接不匹配，忽略消息")
+                    debug_log("WebSocket connection no longer matches session; closing loop")
                     break
 
         except WebSocketDisconnect:
@@ -333,9 +351,8 @@ def setup_routes(manager: "WebUIManager"):
             debug_log(f"WebSocket 錯誤: {e}")
         finally:
             # 安全清理 WebSocket 連接
-            current_session = manager.get_current_session()
-            if current_session and current_session.websocket == websocket:
-                current_session.websocket = None
+            if session.websocket == websocket:
+                session.websocket = None
                 debug_log("已清理會話中的 WebSocket 連接")
 
     @manager.app.post("/api/save-settings")
