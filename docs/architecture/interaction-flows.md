@@ -10,7 +10,7 @@
 - **智能環境適配**: 自動檢測並適配本地、SSH Remote、WSL 環境
 - **無縫狀態切換**: 會話更新時前端局部刷新，保持用戶操作狀態
 - **優雅錯誤處理**: 完整的錯誤恢復機制和超時保護
-- **資源優化**: 單一活躍會話模式，最小化資源佔用
+- **資源優化**: 會話分離 + 自動清理，降低長時間運行的資源佔用
 
 ## 📋 流程概覽
 
@@ -202,23 +202,16 @@ def get_environment_config(env_type: str) -> dict:
 
 #### 2.2 智能會話管理
 ```python
-async def create_or_update_session(
+async def create_session(
     self,
     project_dir: str,
     summary: str,
     timeout: int
 ) -> str:
-    """創建新會話或更新現有會話"""
+    """Create a new session without mutating other sessions."""
 
-    # 保存現有 WebSocket 連接
-    existing_websockets = []
-    if self.current_session:
-        existing_websockets = list(self.current_session.websockets)
-        debug_log(f"保存 {len(existing_websockets)} 個現有 WebSocket 連接")
-
-    # 創建新會話
     session_id = str(uuid.uuid4())
-    self.current_session = WebFeedbackSession(
+    session = WebFeedbackSession(
         session_id=session_id,
         project_directory=os.path.abspath(project_dir),
         summary=summary,
@@ -227,14 +220,8 @@ async def create_or_update_session(
         created_at=datetime.now()
     )
 
-    # 繼承 WebSocket 連接，實現無縫切換
-    for ws in existing_websockets:
-        if ws.client_state == WebSocketState.CONNECTED:
-            self.current_session.add_websocket(ws)
-            debug_log("WebSocket 連接已繼承到新會話")
-
-    # 標記需要發送會話更新通知
-    self._pending_session_update = True
+    self.sessions[session_id] = session
+    self.current_session = session  # latest for backward compatibility
 
     return session_id
 ```
@@ -324,72 +311,53 @@ sequenceDiagram
 
 #### 3.1 頁面渲染
 ```python
-@app.get("/feedback")
-async def feedback_page(request: Request):
-    """回饋頁面渲染"""
+@app.get("/feedback/{session_id}")
+async def feedback_page(request: Request, session_id: str):
+    """回饋頁面渲染（會話分離）"""
     manager = get_web_ui_manager()
-    session = manager.current_session
+    session = manager.get_session(session_id)
 
-    # 載入用戶設定
+    if not session:
+        return templates.TemplateResponse("index.html", {"request": request})
+
     layout_mode = load_user_layout_settings()
-
-    # 獲取當前語言
-    i18n_manager = get_i18n_manager()
-    current_language = i18n_manager.get_current_language()
 
     return templates.TemplateResponse("feedback.html", {
         "request": request,
-        "project_directory": session.project_directory if session else ".",
+        "project_directory": session.project_directory,
         "layout_mode": layout_mode,
-        "current_language": current_language,
-        "session_id": session.session_id if session else None,
-        "title": i18n_manager.t("app.title")
+        "session_id": session.session_id,
+        "title": "MCP Feedback Enhanced"
     })
 ```
 
 #### 3.2 WebSocket 連接處理
 ```python
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket 連接端點"""
+async def websocket_endpoint(websocket: WebSocket, session_id: str | None = None):
+    """WebSocket 連接端點（會話分離）"""
+    manager = get_web_ui_manager()
+    session = manager.get_session(session_id) if session_id else manager.current_session
+    if not session:
+        await websocket.close(code=4004, reason="No active session")
+        return
+
     await websocket.accept()
+    session.websocket = websocket
 
     try:
-        # 註冊 WebSocket 連接
-        manager = get_web_ui_manager()
-        if manager.current_session:
-            manager.current_session.add_websocket(websocket)
-
-        # 發送連接確認
         await websocket.send_json({
-            "type": "connection_established",
-            "data": {
-                "timestamp": datetime.now().isoformat(),
-                "session_id": manager.current_session.session_id if manager.current_session else None
-            }
+            "type": "status_update",
+            "status_info": session.get_status_info()
         })
 
-        # 如果有待處理的會話更新，立即發送
-        if manager._pending_session_update and manager.current_session:
-            await websocket.send_json({
-                "type": "session_updated",
-                "data": {
-                    "session_id": manager.current_session.session_id,
-                    "summary": manager.current_session.summary,
-                    "project_directory": manager.current_session.project_directory
-                }
-            })
-            manager._pending_session_update = False
-
-        # 處理訊息循環
         while True:
             data = await websocket.receive_json()
-            await handle_websocket_message(websocket, data)
+            await handle_websocket_message(manager, session, data)
 
     except WebSocketDisconnect:
-        # 處理連接斷開
-        if manager.current_session:
-            manager.current_session.remove_websocket(websocket)
+        if session.websocket == websocket:
+            session.websocket = None
         debug_log("WebSocket 連接已斷開")
 ```
 
@@ -798,7 +766,7 @@ async def wait_for_feedback(self, timeout: int = 600):
 
 ### 資源管理
 - **自動清理機制**: 超時會話自動清理
-- **內存優化**: 單一活躍會話模式
+- **內存優化**: 多會話隔離 + 過期清理策略
 - **進程管理**: 優雅的進程啟動和關閉
 
 ## 🔒 安全性考量
@@ -819,7 +787,7 @@ async def wait_for_feedback(self, timeout: int = 600):
 
 ### 連接復用優勢
 - **減少 60% 啟動時間**: 避免重複建立服務器和瀏覽器
-- **降低 40% 記憶體使用**: 單一活躍會話模式
+- **降低 40% 記憶體使用**: 會話超時清理與資源回收
 - **提升用戶體驗**: 無縫會話切換，保持操作狀態
 - **減少網路開銷**: WebSocket 連接保持和復用
 

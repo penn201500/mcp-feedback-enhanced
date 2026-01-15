@@ -252,6 +252,7 @@ class WebUIManager:
         return cls._instance
 
     def __init__(self, host: str = "127.0.0.1", port: int = 0):
+        self.sessions: Dict[str, WebFeedbackSession] = {}
         self.current_session: Optional[WebFeedbackSession] = None
         self.global_active_tabs: Dict[str, dict] = {}
         self.app: Optional[FastAPI] = None
@@ -260,7 +261,7 @@ class WebUIManager:
 ```
 
 **核心職責**：
-- **會話管理**: 單一活躍會話的創建、更新、清理
+- **會話管理**: 多會話的創建、查詢、清理（每個會話獨立）
 - **服務器控制**: FastAPI 應用的啟動、停止、重啟
 - **瀏覽器控制**: 智能開啟瀏覽器，避免重複視窗
 - **資源管理**: 自動清理過期資源和錯誤處理
@@ -271,8 +272,8 @@ class WebUIManager:
 async def create_session(self, project_dir: str, summary: str) -> str:
     """創建新會話或更新現有會話"""
 
-async def smart_open_browser(self, url: str) -> bool:
-    """智能開啟瀏覽器，檢測活躍標籤頁"""
+async def smart_open_browser(self, url: str, session: WebFeedbackSession | None) -> bool:
+    """智能開啟瀏覽器，檢測指定會話的活躍標籤頁"""
 
 def cleanup_session(self, reason: CleanupReason = CleanupReason.MANUAL):
     """清理會話資源"""

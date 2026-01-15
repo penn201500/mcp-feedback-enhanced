@@ -69,12 +69,12 @@ except EnvironmentError as e:
 ### HTTP 端點
 
 #### GET /
-主頁重定向到回饋頁面。
+主頁重定向到會話頁面（可選 `session_id` 查詢參數）。
 
-**響應**: `302 Redirect` → `/feedback`
+**響應**: `302 Redirect` → `/feedback/{session_id}`（若可解析會話）
 
-#### GET /feedback
-回饋頁面主入口。
+#### GET /feedback/{session_id}
+回饋頁面主入口（會話分離）。
 
 **響應**: `200 OK`
 ```html
@@ -133,7 +133,7 @@ except EnvironmentError as e:
 ```
 
 #### GET /api/current-session
-獲取當前會話詳細信息。
+獲取當前會話詳細信息（相容端點）。
 
 **響應**: `200 OK`
 ```json
@@ -154,11 +154,27 @@ except EnvironmentError as e:
 }
 ```
 
+#### GET /api/session/{session_id}
+獲取指定會話詳細信息（會話分離）。
+
+**響應**: `200 OK`
+```json
+{
+    "session_id": "550e8400-e29b-41d4-a716-446655440000",
+    "project_directory": "./my-project",
+    "summary": "代碼審查完成",
+    "status": "waiting",
+    "created_at": 1736900000,
+    "last_activity": 1736900050,
+    "feedback_completed": false
+}
+```
+
 ### WebSocket API
 
 #### 連接端點
 ```
-ws://localhost:{port}/ws
+ws://localhost:{port}/ws?session_id={session_id}
 ```
 
 #### 訊息格式

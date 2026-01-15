@@ -2,14 +2,14 @@
 
 ## 🏗️ 整體架構設計
 
-MCP Feedback Enhanced 採用**單一活躍會話 + 持久化 Web UI**的創新架構設計，實現 AI 助手與用戶之間的高效、無縫交互體驗。
+MCP Feedback Enhanced 採用**會話分離 + 持久化 Web UI**的架構設計，實現 AI 助手與用戶之間的高效、無縫交互體驗。
 
 ### 核心設計理念
 
 - **Web-Only 架構**：完全基於 Web 技術，已移除所有 Electron 桌面應用功能
 - **四層架構設計**：清晰的層次分離，便於維護和擴展
 - **智能環境檢測**：自動識別本地、SSH Remote、WSL 環境並優化配置
-- **單一活躍會話**：替代傳統多會話管理，提升性能和用戶體驗
+- **多會話並行（會話隔離）**：每個會話使用獨立 URL 與 WebSocket，避免互相覆蓋
 - **模組化設計**：每層職責明確，支援獨立開發和測試
 
 ### 技術棧概覽
@@ -180,7 +180,7 @@ graph TB
 - **音效通知系統**：智能音效提醒和自訂音效管理（v2.4.3 新增）
 - **智能記憶功能**：輸入框高度記憶和一鍵複製（v2.4.3 新增）
 
-### 3. 單一活躍會話模式
+### 3. 會話分離模式
 ```mermaid
 stateDiagram-v2
     [*] --> NoSession: 系統啟動
@@ -191,8 +191,8 @@ stateDiagram-v2
     Cleanup --> NoSession: 資源釋放
 
     note right of ActiveSession
-        只維護一個活躍會話
-        提升性能和用戶體驗
+        每個會話獨立流轉
+        多個會話可並行存在
     end note
 ```
 
@@ -245,14 +245,13 @@ flowchart TD
 
 ### 1. 創新的會話管理架構
 
-**單一活躍會話設計**：
+**會話分離設計**：
 ```python
-# 傳統多會話設計 (已棄用)
+# 會話分離（每個 session_id 對應一個會話）
 self.sessions: Dict[str, WebFeedbackSession] = {}
 
-# 創新單一活躍會話設計
+# 保留最新會話引用，用於向後相容
 self.current_session: Optional[WebFeedbackSession] = None
-self.global_active_tabs: Dict[str, dict] = {}  # 全局標籤頁狀態
 ```
 
 **會話生命週期管理**：
