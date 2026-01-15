@@ -1,3 +1,9 @@
+<!--
+{{RIPER-10 Action}}
+Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+Taste: Document session-scoped UI and API changes
+-->
+
 # API 參考文檔
 
 本文檔提供 MCP Feedback Enhanced 的完整 API 參考，包括 MCP 工具、Web API、WebSocket 通信協議和內部 API 接口。

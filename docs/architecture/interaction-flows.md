@@ -1,3 +1,9 @@
+<!--
+{{RIPER-10 Action}}
+Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+Taste: Document session-scoped UI and API changes
+-->
+
 # 交互流程文檔
 
 ## 🔄 AI 助手與 MCP 服務完整交互流程

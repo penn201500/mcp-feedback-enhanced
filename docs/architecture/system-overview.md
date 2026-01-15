@@ -1,3 +1,9 @@
+<!--
+{{RIPER-10 Action}}
+Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+Taste: Document session-scoped UI and API changes
+-->
+
 # 系統架構總覽
 
 ## 🏗️ 整體架構設計

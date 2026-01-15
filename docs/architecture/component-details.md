@@ -1,3 +1,9 @@
+<!--
+{{RIPER-10 Action}}
+Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+Taste: Document session-scoped UI and API changes
+-->
+
 # 組件詳細說明
 
 ## 🏗️ 四層架構組件
