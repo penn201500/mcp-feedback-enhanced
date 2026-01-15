@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# {{RIPER-10 Action}}
+# Role: QE | Path: Lightning | Time: 2026-01-15 16:51
+# Taste: Align unit tests with session-scoped routing behavior.
 """
 Web UI 單元測試
 """
@@ -188,7 +191,7 @@ class TestWebUIRoutes:
         )
 
         client = TestClient(web_ui_manager.app)
-        response = client.get("/")
+        response = client.get("/", follow_redirects=True)
 
         assert response.status_code == 200
         assert TestData.SAMPLE_SESSION["summary"] in response.text

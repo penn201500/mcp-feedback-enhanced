@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# {{RIPER-10 Action}}
+# Role: LD | Path: Lightning | Time: 2026-01-15 16:51
+# Taste: Restore explicit status updates and align feedback submission state.
 """
 Web 回饋會話模型
 ===============
@@ -242,6 +245,42 @@ class WebFeedbackSession:
 
         debug_log(
             f"✅ 會話 {self.session_id} 狀態流轉: {old_status.value} → {next_status.value} - {self.status_message}"
+        )
+        return True
+
+    def update_status(self, status: SessionStatus, message: str | None = None) -> bool:
+        """Update status directly for compatibility with legacy integrations."""
+        terminal_states = {
+            SessionStatus.COMPLETED,
+            SessionStatus.ERROR,
+            SessionStatus.TIMEOUT,
+            SessionStatus.EXPIRED,
+        }
+        if self.status in terminal_states:
+            debug_log(
+                f"⚠️ 會話 {self.session_id} 已處於終態 {self.status.value}，無法更新狀態"
+            )
+            return False
+
+        old_status = self.status
+        self.status = status
+        if message:
+            self.status_message = message
+        else:
+            default_messages = {
+                SessionStatus.ACTIVE: "會話已啟動",
+                SessionStatus.FEEDBACK_SUBMITTED: "用戶已提交反饋",
+                SessionStatus.COMPLETED: "會話已完成",
+            }
+            self.status_message = default_messages.get(status, "狀態已更新")
+
+        self.last_activity = time.time()
+
+        if status == SessionStatus.FEEDBACK_SUBMITTED:
+            self._schedule_auto_cleanup()
+
+        debug_log(
+            f"✅ 會話 {self.session_id} 狀態更新: {old_status.value} → {status.value} - {self.status_message}"
         )
         return True
 
@@ -535,8 +574,8 @@ class WebFeedbackSession:
         self.settings = settings or {}
         self.images = self._process_images(images)
 
-        # 進入下一步：等待中 → 已提交反饋
-        self.next_step("已送出反饋，等待下次 MCP 調用")
+        # Mark as submitted to avoid leaving the session in ACTIVE.
+        self.update_status(SessionStatus.FEEDBACK_SUBMITTED, "已送出反饋，等待下次 MCP 調用")
 
         self.feedback_completed.set()
 
