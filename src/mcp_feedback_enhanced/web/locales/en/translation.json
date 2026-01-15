@@ -245,6 +245,8 @@
         "activeTime": "Active Time",
         "switchSession": "Switch Session",
         "viewDetails": "View Details",
+        "openSession": "Open Session",
+        "openSessionTitle": "Open session in a new tab",
         "refresh": "Refresh",
         "noHistory": "No session history",
         "todaySessions": "Today's Sessions",

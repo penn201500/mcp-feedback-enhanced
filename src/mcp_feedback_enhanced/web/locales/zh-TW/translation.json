@@ -252,6 +252,8 @@
         "activeTime": "活躍時間",
         "switchSession": "切換會話",
         "viewDetails": "詳細資訊",
+        "openSession": "開啟會話",
+        "openSessionTitle": "在新分頁開啟會話",
         "refresh": "重新整理",
         "noHistory": "暫無歷史會話",
         "todaySessions": "今日會話",

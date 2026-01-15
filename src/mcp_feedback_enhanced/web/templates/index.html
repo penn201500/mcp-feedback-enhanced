@@ -1,3 +1,8 @@
+<!--
+{{RIPER-10 Action}}
+Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+Taste: Provide explicit session-not-found guidance on the landing page
+-->
 <!DOCTYPE html>
 <html lang="zh-CN" id="html-root">
 <head>
@@ -75,6 +80,26 @@
             border: 1px solid var(--accent-color);
             border-radius: 8px;
             color: var(--accent-color);
+        }
+
+        .waiting-error {
+            margin-top: 16px;
+            padding: 12px;
+            border: 1px solid var(--error-color);
+            border-radius: 8px;
+            background: rgba(244, 67, 54, 0.08);
+            color: var(--error-color);
+            text-align: left;
+        }
+
+        .waiting-error-title {
+            font-weight: 600;
+        }
+
+        .waiting-error-hint {
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-size: 0.95em;
         }
 
         /* 連接狀態指示器 */
@@ -306,6 +331,14 @@
             <div class="waiting-status">
                 等待 MCP 服務調用以建立回饋會話...
             </div>
+            {% if error_message %}
+            <div class="waiting-error">
+                <div class="waiting-error-title">{{ error_message }}</div>
+                {% if error_hint %}
+                <div class="waiting-error-hint">{{ error_hint }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 

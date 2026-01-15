@@ -88,6 +88,8 @@ def setup_routes(manager: "WebUIManager"):
                     "title": "MCP Feedback Enhanced",
                     "has_session": False,
                     "version": __version__,
+                    "error_message": "會話不存在或已過期 (Session not found or expired).",
+                    "error_hint": "請在會話管理中重新打開，或重新觸發 MCP 互動以建立新會話。",
                 },
             )
 

@@ -635,12 +635,18 @@
                 sessionData.status === 'feedback_submitted';
 
             if (isOpenable) {
+                const openLabel = window.i18nManager ?
+                    window.i18nManager.t('sessionManagement.openSession') :
+                    'Open session';
+                const openTitle = window.i18nManager ?
+                    window.i18nManager.t('sessionManagement.openSessionTitle') :
+                    openLabel;
                 const openButton = DOMUtils.createElement('button', {
                     className: 'btn-small btn-primary',
-                    textContent: '↗',
+                    textContent: '↗ ' + openLabel,
                     attributes: {
-                        title: 'Open session',
-                        'aria-label': 'Open session'
+                        title: openTitle,
+                        'aria-label': openTitle
                     },
                     style: 'margin-left: 4px; font-size: 12px; padding: 2px 6px;'
                 });
