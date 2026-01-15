@@ -1,3 +1,6 @@
+// {{RIPER-10 Action}}
+// Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+// Taste: Keep each page bound to its own session ID to avoid cross-session refreshes
 /**
  * MCP Feedback Enhanced - 主應用程式
  * =================================
@@ -21,7 +24,7 @@
     function FeedbackApp(sessionId) {
         // 會話信息
         this.sessionId = sessionId;
-        this.currentSessionId = null;
+        this.currentSessionId = sessionId || null;
 
         // 模組管理器
         this.tabManager = null;
@@ -207,6 +210,7 @@
 
                         // 7. 初始化 WebSocket 管理器
                         self.webSocketManager = new window.MCPFeedback.WebSocketManager({
+                            sessionId: self.sessionId,
                             tabManager: self.tabManager,
                             connectionMonitor: self.connectionMonitor,
                             onOpen: function() {
@@ -821,6 +825,12 @@
         console.log('🔄 處理會話更新:', data);
         console.log('🔍 檢查 action 字段:', data.action);
         console.log('🔍 檢查 type 字段:', data.type);
+
+        if (data.session_info && this.sessionId && data.session_info.session_id &&
+            data.session_info.session_id !== this.sessionId) {
+            console.log('🔒 Ignoring session update for a different session:', data.session_info.session_id);
+            return;
+        }
 
         // 檢查是否是新會話創建的通知
         if (data.action === 'new_session_created' || data.type === 'new_session_created') {
@@ -1683,7 +1693,13 @@
 
         const self = this;
 
-        fetch('/api/current-session')
+        const sessionId = this.currentSessionId || this.sessionId;
+        if (!sessionId) {
+            console.warn('⚠️ No session ID available for refresh');
+            return;
+        }
+
+        fetch('/api/session/' + encodeURIComponent(sessionId))
             .then(function(response) {
                 if (!response.ok) {
                     throw new Error('API 請求失敗: ' + response.status);

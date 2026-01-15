@@ -1,3 +1,6 @@
+// {{RIPER-10 Action}}
+// Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+// Taste: Add session-open affordance without changing existing i18n strings
 /**
  * MCP Feedback Enhanced - 會話 UI 渲染模組
  * =======================================
@@ -626,6 +629,32 @@
         });
 
         actions.appendChild(viewButton);
+
+        if (isHistory && sessionData.session_id) {
+            const isOpenable = StatusUtils.isActiveStatus(sessionData.status) ||
+                sessionData.status === 'feedback_submitted';
+
+            if (isOpenable) {
+                const openButton = DOMUtils.createElement('button', {
+                    className: 'btn-small btn-primary',
+                    textContent: '↗',
+                    attributes: {
+                        title: 'Open session',
+                        'aria-label': 'Open session'
+                    },
+                    style: 'margin-left: 4px; font-size: 12px; padding: 2px 6px;'
+                });
+
+                DOMUtils.addEventListener(openButton, 'click', function(e) {
+                    e.stopPropagation();
+                    const sessionUrl = window.location.origin + '/feedback/' +
+                        encodeURIComponent(sessionData.session_id);
+                    window.open(sessionUrl, '_blank', 'noopener');
+                });
+
+                actions.appendChild(openButton);
+            }
+        }
 
         // 如果是歷史會話，新增匯出按鈕
         if (isHistory) {

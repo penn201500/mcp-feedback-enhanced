@@ -1,3 +1,6 @@
+// {{RIPER-10 Action}}
+// Role: LD | Path: Collaborative | Time: 2026-01-15 16:12
+// Taste: Bind WebSocket connections to explicit session IDs
 /**
  * MCP Feedback Enhanced - WebSocket 管理模組
  * =========================================
@@ -26,6 +29,7 @@
         this.reconnectDelay = options.reconnectDelay || Utils.CONSTANTS.DEFAULT_RECONNECT_DELAY;
         this.heartbeatInterval = null;
         this.heartbeatFrequency = options.heartbeatFrequency || Utils.CONSTANTS.DEFAULT_HEARTBEAT_FREQUENCY;
+        this.sessionId = options.sessionId || null;
 
         // 事件回調
         this.onOpen = options.onOpen || null;
@@ -83,10 +87,16 @@
                 this.websocket = null;
             }
 
-            // 添加語言參數到 WebSocket URL
-            const language = window.i18nManager ? window.i18nManager.getCurrentLanguage() : 'zh-TW';
-            const wsUrlWithLang = wsUrl + (wsUrl.includes('?') ? '&' : '?') + 'lang=' + language;
-            this.websocket = new WebSocket(wsUrlWithLang);
+        // 添加語言與會話參數到 WebSocket URL
+        const language = window.i18nManager ? window.i18nManager.getCurrentLanguage() : 'zh-TW';
+        const sessionId = this.sessionId || (window.feedbackApp ? window.feedbackApp.sessionId : null);
+        const params = new URLSearchParams();
+        params.set('lang', language);
+        if (sessionId) {
+            params.set('session_id', sessionId);
+        }
+        const wsUrlWithParams = wsUrl + '?' + params.toString();
+        this.websocket = new WebSocket(wsUrlWithParams);
             this.setupWebSocketEvents();
 
         } catch (error) {
